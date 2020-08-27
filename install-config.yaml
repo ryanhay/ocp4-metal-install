@@ -1,0 +1,24 @@
+apiVersion: v1
+baseDomain: ocp.lan
+compute:
+  - hyperthreading: Enabled
+    name: worker
+    replicas: 0 # Must be set to 0 for User Provisioned Installation as worker nodes will be manually deployed.
+controlPlane:
+  hyperthreading: Enabled
+  name: master
+  replicas: 3
+metadata:
+  name: lab # Cluster name
+networking:
+  clusterNetwork:
+    - cidr: 10.128.0.0/14
+      hostPrefix: 23
+  networkType: OpenShiftSDN
+  serviceNetwork:
+    - 172.30.0.0/16
+platform:
+  none: {}
+fips: false
+pullSecret: '{"auths": ...}'
+sshKey: "ssh-ed25519 AAAA..."
