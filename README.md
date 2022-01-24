@@ -34,7 +34,7 @@
    - Command Line Interface for Linux and your workstations OS
    - Red Hat Enterprise Linux CoreOS (RHCOS)
      - rhcos-X.X.X-x86_64-metal.x86_64.raw.gz
-     - rhcos-X.X.X-x86_64-installer.x86_64.iso
+     - rhcos-X.X.X-x86_64-installer.x86_64.iso (or rhcos-X.X.X-x86_64-live.x86_64.iso for newer versions)
 
 ## Prepare the 'Bare Metal' environment
 
@@ -42,6 +42,8 @@
 
 1. Copy the CentOS 8 iso to an ESXi datastore
 1. Create a new Port Group called 'OCP' under Networking
+    - (In case of VirtualBox choose "Internal Network" when creating each VM and give it the same name. ocp for instance)
+    - (In case of ProxMox you may use the same network bridge and choose a specific VLAN tag. 50 for instance) 
 1. Create 3 Control Plane virtual machines with minimum settings:
    - Name: ocp-cp-# (Example ocp-cp-1)
    - 4vcpu
@@ -88,7 +90,7 @@
 1. Move the files downloaded from the RedHat Cluster Manager site to the ocp-svc node
 
    ```bash
-   scp ~/Downloads/openshift-install-linux.tar.gz ~/Downloads/openshift-client-linux.tar.gz ~/Downloads/rhcos-x.x.x-x86_64-installer.x86_64.iso root@{ocp-svc_IP_address}:/root/
+   scp ~/Downloads/openshift-install-linux.tar.gz ~/Downloads/openshift-client-linux.tar.gz ~/Downloads/rhcos-metal.x86_64.raw.gz root@{ocp-svc_IP_address}:/root/
    ```
 
 1. SSH to the ocp-svc vm
@@ -223,6 +225,8 @@
 
    ```bash
    firewall-cmd --add-port=53/udp --zone=internal --permanent
+   # for OCP 4.9 and later 53/tcp is required
+   firewall-cmd --add-port=53/tcp --zone=internal --permanent
    firewall-cmd --reload
    ```
 
@@ -484,11 +488,17 @@
    ```bash
    # Bootstrap Node - ocp-bootstrap
    coreos.inst.install_dev=sda coreos.inst.image_url=http://192.168.22.1:8080/ocp4/rhcos coreos.inst.insecure=yes coreos.inst.ignition_url=http://192.168.22.1:8080/ocp4/bootstrap.ign
+   
+   # Or if you waited for it boot, use the following command then just reboot after it finishes and make sure you remove the attached .iso
+   sudo coreos-installer install /dev/sda -u http://192.168.22.1:8080/ocp4/rhcos -I http://192.168.22.1:8080/ocp4/bootstrap.ign --insecure --insecure-ignition
    ```
 
    ```bash
    # Each of the Control Plane Nodes - ocp-cp-\#
    coreos.inst.install_dev=sda coreos.inst.image_url=http://192.168.22.1:8080/ocp4/rhcos coreos.inst.insecure=yes coreos.inst.ignition_url=http://192.168.22.1:8080/ocp4/master.ign
+   
+   # Or if you waited for it boot, use the following command then just reboot after it finishes and make sure you remove the attached .iso
+   sudo coreos-installer install /dev/sda -u http://192.168.22.1:8080/ocp4/rhcos -I http://192.168.22.1:8080/ocp4/master.ign --insecure --insecure-ignition
    ```
 
 1. Power on the ocp-w-\# hosts and select 'Tab' to enter boot configuration. Enter the following configuration:
@@ -496,6 +506,9 @@
    ```bash
    # Each of the Worker Nodes - ocp-w-\#
    coreos.inst.install_dev=sda coreos.inst.image_url=http://192.168.22.1:8080/ocp4/rhcos coreos.inst.insecure=yes coreos.inst.ignition_url=http://192.168.22.1:8080/ocp4/worker.ign
+   
+   # Or if you waited for it boot, use the following command then just reboot after it finishes and make sure you remove the attached .iso
+   sudo coreos-installer install /dev/sda -u http://192.168.22.1:8080/ocp4/rhcos -I http://192.168.22.1:8080/ocp4/worker.ign --insecure --insecure-ignition
    ```
 
 ## Monitor the Bootstrap Process
